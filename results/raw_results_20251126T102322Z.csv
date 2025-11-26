@@ -1,0 +1,1 @@
+run_id,timestamp_utc,algorithm,size,structure,mem_limit_mb,repetition,seed,time_s,peak_mem_mb,memory_exceeded,comparisons,correct,error_msg,orig_checksum,sorted_checksum

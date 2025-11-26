@@ -1,152 +1,105 @@
 import csv
-from datagen import gen_reverse, gen_random, gen_nearly_sorted, gen_duplicates  # or any of your functions
+from datagen import gen_reverse, gen_random, gen_nearly_sorted, gen_duplicates  
 
 # generate dataset
 data1 = gen_reverse(10000)
 data2 = gen_reverse(50000)
 data3 = gen_reverse(100000)
-data4 = gen_reverse(250000)
-data5 = gen_reverse(1000000)
+data4 = gen_reverse(500000)
 
-data6 = gen_random(10000)
-data7 = gen_random(50000)
-data8 = gen_random(100000)
-data9 = gen_random(250000)
-data10 = gen_random(1000000)
+data5 = gen_random(10000)
+data6 = gen_random(50000)
+data7 = gen_random(100000)
+data8 = gen_random(500000)
 
-data11 = gen_nearly_sorted(10000)
-data12 = gen_nearly_sorted(50000)
-data13 = gen_nearly_sorted(100000)
-data14 = gen_nearly_sorted(250000)
-data15 = gen_nearly_sorted(1000000)
+data9 = gen_nearly_sorted(10000)
+data10 = gen_nearly_sorted(50000)
+data11 = gen_nearly_sorted(100000)
+data12 = gen_nearly_sorted(500000)
 
-data16 = gen_duplicates(10000)
-data17 = gen_duplicates(50000)
-data18 = gen_duplicates(100000)
-data19 = gen_duplicates(250000)
-data20 = gen_duplicates(1000000)
+data13 = gen_duplicates(10000)
+data14 = gen_duplicates(50000)
+data15 = gen_duplicates(100000)
+data16 = gen_duplicates(500000)
 
-data21 = gen_reverse(5000000)
-data22 = gen_random(5000000)
-data23 = gen_nearly_sorted(5000000)
-data24 = gen_duplicates(5000000)
-
-
-
-
-# # save to CSV
-# with open("datasets/reverse10k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data1:
-#         writer.writerow([num]) 
-
-# with open("datasets/reverse50k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data2:
-#         writer.writerow([num])  
-
-# with open("datasets/reverse100k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data3:
-#         writer.writerow([num])   
-
-# with open("datasets/reverse250k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data4:
-#         writer.writerow([num])
-
-# with open("datasets/reverse1000k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data5:
-#         writer.writerow([num])
-
-# with open("datasets/random10k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data6:
-#         writer.writerow([num]) 
-
-# with open("datasets/random50k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data7:
-#         writer.writerow([num])  
-
-# with open("datasets/random100k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data8:
-#         writer.writerow([num])   
-
-# with open("datasets/random250k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data9:
-#         writer.writerow([num])
-
-# with open("datasets/random1000k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data10:
-#         writer.writerow([num])
-
-# with open("datasets/nearly10k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data11:
-#         writer.writerow([num]) 
-
-# with open("datasets/nearly50k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data12:
-#         writer.writerow([num])  
-
-# with open("datasets/nearly100k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data13:
-#         writer.writerow([num])   
-
-# with open("datasets/nearly250k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data14:
-#         writer.writerow([num])
-
-# with open("datasets/nearly1000k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data15:
-#         writer.writerow([num])
-
-# with open("datasets/dup10k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data16:
-#         writer.writerow([num]) 
-
-# with open("datasets/dup50k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data17:
-#         writer.writerow([num])  
-
-# with open("datasets/dup100k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data18:
-#         writer.writerow([num])   
-
-# with open("datasets/dup250k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data19:
-#         writer.writerow([num])
-
-# with open("datasets/dup1000k.csv", "w", newline="") as f:
-#     writer = csv.writer(f)
-#     for num in data20:
-#         writer.writerow([num])
-
-with open("datasets/reverse5m.csv", "w", newline="") as f:
+# save to CSV
+with open("datasets/reverse10k.csv", "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerows([[num] for num in data21])
+    for num in data1:
+        writer.writerow([num]) 
 
-with open("datasets/random5m.csv" , "w", newline="") as f:
+with open("datasets/reverse50k.csv", "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerows([[num] for num in data22])
+    for num in data2:
+        writer.writerow([num])  
 
-with open("datasets/nearly5m.csv", "w", newline="") as f:
+with open("datasets/reverse100k.csv", "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerows([[num] for num in data23])
+    for num in data3:
+        writer.writerow([num])   
 
-with open("datasets/dup5m.csv", "w", newline="") as f:
+with open("datasets/reverse500k.csv", "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerows([[num] for num in data24])
+    for num in data4:
+        writer.writerow([num])
+
+with open("datasets/random10k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data5:
+        writer.writerow([num]) 
+
+with open("datasets/random50k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data6:
+        writer.writerow([num])  
+
+with open("datasets/random100k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data7:
+        writer.writerow([num])   
+
+with open("datasets/random500k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data8:
+        writer.writerow([num])
+
+with open("datasets/nearly10k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data9:
+        writer.writerow([num]) 
+
+with open("datasets/nearly50k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data10:
+        writer.writerow([num])  
+
+with open("datasets/nearly100k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data11:
+        writer.writerow([num])   
+
+with open("datasets/nearly500k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data12:
+        writer.writerow([num])
+
+with open("datasets/dup10k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data13:
+        writer.writerow([num]) 
+
+with open("datasets/dup50k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data14:
+        writer.writerow([num])  
+
+with open("datasets/dup100k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data15:
+        writer.writerow([num])   
+
+with open("datasets/dup500k.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for num in data16:
+        writer.writerow([num])
+
