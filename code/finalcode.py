@@ -236,10 +236,10 @@ def run_experiments():
 
 def generate_table1_by_mem(raw_csv_path):
     """
-    Build Table 1: Execution Time (seconds) - No memory Constraints (and for each memory constraint separately)
-    We'll create one CSV per memory-limit setting containing rows:
-    | run_id | size | structure | QuickSort | MergeSort | Trial |
-    QuickSort and MergeSort columns hold time_s for that algorithm/trial.
+    Build Table 1 including:
+    QuickSort_time_s, QuickSort_memory_MB,
+    MergeSort_time_s, MergeSort_memory_MB
+    for each memory limit.
     """
     import collections
 
@@ -256,22 +256,65 @@ def generate_table1_by_mem(raw_csv_path):
         grouped[r['mem_limit_mb']].append(r)
 
     for mem_limit, group in grouped.items():
-        # nested grouping by size, structure, repetition
+        # nested grouping by (size, structure, repetition)
         table = {}
+
         for r in group:
             key = (r['size'], r['structure'], r['repetition'])
-            table.setdefault(key, {})
-            table[key][r['algorithm']] = r['time_s']
+            algo = r['algorithm']  # 'quicksort' or 'mergesort'
+
+            # -----------------------------
+           # CHANGE #1:
+            # struktur tabel baru yang menyimpan
+            # time + mem untuk masing-masing algoritma
+            # -----------------------------
+            if key not in table:
+                table[key] = {
+                    'quicksort': {'time': '', 'mem': ''},
+                    'mergesort': {'time': '', 'mem': ''}
+                }
+
+            # -----------------------------
+            # CHANGE #2:
+            # memasukkan dua nilai sekaligus:
+            # time_s dan peak_mem_mb
+            # -----------------------------
+            table[key][algo]['time'] = r['time_s']
+            table[key][algo]['mem'] = r['peak_mem_mb']
+
         # write CSV
         out_path = os.path.join(RESULTS_DIR, f"table1_mem{mem_limit}MB.csv")
         with open(out_path, 'w', newline='') as of:
             w = csv.writer(of)
-            w.writerow(['size', 'structure', 'trial', 'QuickSort_time_s', 'MergeSort_time_s'])
+
+            # -----------------------------
+            # CHANGE #3: header baru
+            # -----------------------------
+            w.writerow([
+                'size', 'structure', 'trial',
+                'QuickSort_time_s', 'QuickSort_memory_MB',
+                'MergeSort_time_s', 'MergeSort_memory_MB'
+            ])
+
+            # isi tabel
             for (size, structure, trial), vals in sorted(table.items()):
-                qs = vals.get('quicksort', '')
-                ms = vals.get('mergesort', '')
-                w.writerow([size, structure, trial, qs, ms])
+                qs_t = vals['quicksort']['time']
+                qs_m = vals['quicksort']['mem']
+                ms_t = vals['mergesort']['time']
+                ms_m = vals['mergesort']['mem']
+
+                # -----------------------------
+                # CHANGE #4:
+                # menulis 4 kolom hasil
+                # -----------------------------
+                w.writerow([
+                    size, structure, trial,
+                    qs_t, qs_m,
+                    ms_t, ms_m
+                ])
+
         print(f"Wrote table for mem {mem_limit} MB -> {out_path}")
+
 
 
 # ==========================

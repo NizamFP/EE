@@ -34,7 +34,7 @@ def mergesort(arr):
 
     mid = len(arr) // 2
     left, left_comps = mergesort(arr[:mid])
-    right, right_comps = mergesort(arr[mid])
+    right, right_comps = mergesort(arr[mid:])
 
     merged, merge_comps = merge(left, right)
     return  merged, left_comps + right_comps + merge_comps
