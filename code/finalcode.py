@@ -20,7 +20,7 @@ DATASETS_DIR = os.path.join(os.path.dirname(__file__), "..", "datasets")
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-SIZES = [10_000] # [10_000, 50_000, 100_000, 500_000]
+SIZES = [10_000, 50_000, 100_000, 500_000]
 SIZE_LABEL = {10000: '10k', 50000: '50k', 100000: '100k', 500000: '500k'}
 STRUCTURES = ['random', 'reversed', 'nearly_sorted', 'duplicate']
 STRUCTURE_FILENAME_PREFIX = {
@@ -29,9 +29,9 @@ STRUCTURE_FILENAME_PREFIX = {
     'nearly_sorted': 'nearly',
     'duplicate': 'dup'
 }
-MEM_LIMITS_MB = [256] #[128, 256, 512, 1024]
+MEM_LIMITS_MB = [128, 256, 512, 1024]
 ALGORITHMS = {'quicksort': quicksort, 'mergesort': mergesort}
-REPETITIONS = 1 #5
+REPETITIONS = 5
 SEED_BASE = 123456
 
 RAW_CSV = os.path.join(RESULTS_DIR, f"raw_results_{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.csv")
