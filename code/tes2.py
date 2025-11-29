@@ -24,7 +24,7 @@ def mergesort(arr):
 
         mergesort(left_half)
         mergesort(right_half)
-
+ 
         i = j = k = 0
         while i < len(left_half) and j < len(right_half):
             if left_half[i] <= right_half[j]:

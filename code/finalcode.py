@@ -236,87 +236,98 @@ def run_experiments():
 
 def generate_table1_by_mem(raw_csv_path):
     """
-    Build Table 1 including:
-    QuickSort_time_s, QuickSort_memory_MB,
-    MergeSort_time_s, MergeSort_memory_MB
-    for each memory limit.
+    Create Table 1 (averaged over 5 trials) with standard deviations:
+    size, structure,
+    QuickSort_avg_time_s, QuickSort_std_time_s,
+    QuickSort_avg_memory_MB, QuickSort_std_memory_MB,
+    MergeSort_avg_time_s, MergeSort_std_time_s,
+    MergeSort_avg_memory_MB, MergeSort_std_memory_MB
     """
     import collections
+    import statistics
 
-    # read raw results
+    # Load raw results
     rows = []
     with open(raw_csv_path, newline='') as f:
         reader = csv.DictReader(f)
         for r in reader:
+            # convert numeric fields
+            r['time_s'] = float(r['time_s']) if r['time_s'] not in ('', None) else None
+            r['peak_mem_mb'] = float(r['peak_mem_mb']) if r['peak_mem_mb'] not in ('', None) else None
             rows.append(r)
 
-    # group by mem_limit
+    # Group by memory limit
     grouped = collections.defaultdict(list)
     for r in rows:
         grouped[r['mem_limit_mb']].append(r)
 
+    # Process each memory constraint
     for mem_limit, group in grouped.items():
-        # nested grouping by (size, structure, repetition)
-        table = {}
+
+        # key → (size, structure)
+        # values → dict containing lists for each metric
+        bucket = collections.defaultdict(lambda: {
+            'qs_times': [], 'qs_mems': [],
+            'ms_times': [], 'ms_mems': []
+        })
 
         for r in group:
-            key = (r['size'], r['structure'], r['repetition'])
-            algo = r['algorithm']  # 'quicksort' or 'mergesort'
+            key = (r['size'], r['structure'])
 
-            # -----------------------------
-           # CHANGE #1:
-            # struktur tabel baru yang menyimpan
-            # time + mem untuk masing-masing algoritma
-            # -----------------------------
-            if key not in table:
-                table[key] = {
-                    'quicksort': {'time': '', 'mem': ''},
-                    'mergesort': {'time': '', 'mem': ''}
-                }
+            if r['algorithm'] == 'quicksort':
+                if r['time_s'] is not None:
+                    bucket[key]['qs_times'].append(r['time_s'])
+                if r['peak_mem_mb'] is not None:
+                    bucket[key]['qs_mems'].append(r['peak_mem_mb'])
 
-            # -----------------------------
-            # CHANGE #2:
-            # memasukkan dua nilai sekaligus:
-            # time_s dan peak_mem_mb
-            # -----------------------------
-            table[key][algo]['time'] = r['time_s']
-            table[key][algo]['mem'] = r['peak_mem_mb']
+            elif r['algorithm'] == 'mergesort':
+                if r['time_s'] is not None:
+                    bucket[key]['ms_times'].append(r['time_s'])
+                if r['peak_mem_mb'] is not None:
+                    bucket[key]['ms_mems'].append(r['peak_mem_mb'])
 
-        # write CSV
+        # Output file
         out_path = os.path.join(RESULTS_DIR, f"table1_mem{mem_limit}MB.csv")
         with open(out_path, 'w', newline='') as of:
             w = csv.writer(of)
 
-            # -----------------------------
-            # CHANGE #3: header baru
-            # -----------------------------
+            # Updated header with stdev
             w.writerow([
-                'size', 'structure', 'trial',
-                'QuickSort_time_s', 'QuickSort_memory_MB',
-                'MergeSort_time_s', 'MergeSort_memory_MB'
+                'size', 'structure',
+                'QuickSort_avg_time_s', 'QuickSort_std_time_s',
+                'QuickSort_avg_memory_MB', 'QuickSort_std_memory_MB',
+                'MergeSort_avg_time_s', 'MergeSort_std_time_s',
+                'MergeSort_avg_memory_MB', 'MergeSort_std_memory_MB'
             ])
 
-            # isi tabel
-            for (size, structure, trial), vals in sorted(table.items()):
-                qs_t = vals['quicksort']['time']
-                qs_m = vals['quicksort']['mem']
-                ms_t = vals['mergesort']['time']
-                ms_m = vals['mergesort']['mem']
+            # Fill table
+            for (size, structure), vals in sorted(bucket.items(), key=lambda x: (int(x[0][0]), x[0][1])):
 
-                # -----------------------------
-                # CHANGE #4:
-                # menulis 4 kolom hasil
-                # -----------------------------
+                def mean(arr):
+                    return statistics.mean(arr) if arr else ''
+
+                def std(arr):
+                    return statistics.stdev(arr) if len(arr) > 1 else ''
+
+                qs_avg_t = mean(vals['qs_times'])
+                qs_std_t = std(vals['qs_times'])
+                qs_avg_m = mean(vals['qs_mems'])
+                qs_std_m = std(vals['qs_mems'])
+
+                ms_avg_t = mean(vals['ms_times'])
+                ms_std_t = std(vals['ms_times'])
+                ms_avg_m = mean(vals['ms_mems'])
+                ms_std_m = std(vals['ms_mems'])
+
                 w.writerow([
-                    size, structure, trial,
-                    qs_t, qs_m,
-                    ms_t, ms_m
+                    size, structure,
+                    qs_avg_t, qs_std_t,
+                    qs_avg_m, qs_std_m,
+                    ms_avg_t, ms_std_t,
+                    ms_avg_m, ms_std_m
                 ])
 
-        print(f"Wrote table for mem {mem_limit} MB -> {out_path}")
-
-
-
+        print(f"Wrote averaged table (with stdev) for mem {mem_limit} MB -> {out_path}")
 # ==========================
 # Main
 # ==========================

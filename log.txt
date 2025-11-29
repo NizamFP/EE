@@ -1,3 +1,6 @@
-Raw results written to: /workspaces/EE/code/../results/raw_results_20251127T091922Z.csv
+Raw results written to: /workspaces/EE/code/../results/raw_results_20251127T093008Z.csv
+Wrote table for mem 128 MB -> /workspaces/EE/code/../results/table1_mem128MB.csv
 Wrote table for mem 256 MB -> /workspaces/EE/code/../results/table1_mem256MB.csv
+Wrote table for mem 512 MB -> /workspaces/EE/code/../results/table1_mem512MB.csv
+Wrote table for mem 1024 MB -> /workspaces/EE/code/../results/table1_mem1024MB.csv
 Done
