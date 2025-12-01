@@ -575,3 +575,44 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("Dataset generation module ready for experimental use")
     print("=" * 70)
+
+def load_csv(path):
+    """
+    Load dataset from CSV file in simple format.
+    Compatible with experimentmergesort.py expectations.
+    
+    Args:
+        path (str): Path to CSV file
+        
+    Returns:
+        List[int]: Array of integers from CSV
+        
+    File Format Expected:
+        value
+        123
+        456
+        789
+    """
+    data = []
+    with open(path, newline="") as f:
+        reader = csv.reader(f)
+        # Skip header if present
+        try:
+            first_row = next(reader)
+            # Check if first row is header
+            try:
+                int(first_row[0])
+                # It's a number, add it to data
+                data.append(int(first_row[0]))
+            except ValueError:
+                # It's a header like "value", skip it
+                pass
+        except StopIteration:
+            return data
+        
+        # Read remaining rows
+        for row in reader:
+            if row:
+                data.append(int(row[0]))
+    
+    return data

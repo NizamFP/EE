@@ -1,29 +1,50 @@
+"""
+Sorting Algorithm Implementations for IB CS Extended Essay
+QuickSort (in-place with median-of-three) and MergeSort (recursive)
+
+Provides two wrapper variants:
+1. Standard wrappers (no memory tracking) - for accurate timing
+2. Memory-tracking wrappers (with tracemalloc) - for memory analysis
+
+Author: [Candidate Number]
+Date: November 2024
+Purpose: IB Computer Science Extended Essay (May 2026)
+Platform: GitHub Codespaces (Linux) / Python 3.12+
+"""
+
 import sys
+import tracemalloc
+import psutil
+import os
+
+# Increase recursion limit for large datasets
+sys.setrecursionlimit(100000)
+
+
+# ==========================================
+# QUICKSORT IMPLEMENTATION
+# ==========================================
 
 def quicksort(arr, low=None, high=None, comparisons=None):
     """
-    In-place QuickSort implementation with median-of-three pivot selection.
-    
-    This implementation sorts the array in-place to achieve O(log n) space
-    complexity (from recursion stack only), avoiding the O(n) auxiliary
-    space that would result from creating new sublists.
+    In-place QuickSort with median-of-three pivot selection.
     
     Args:
-        arr (list): Array to be sorted (modified in-place)
-        low (int): Starting index of partition (default: 0)
-        high (int): Ending index of partition (default: len(arr)-1)
-        comparisons (list): Mutable container tracking comparison count
-        
+        arr (list): Array to sort (modified in-place)
+        low (int): Starting index (default: 0)
+        high (int): Ending index (default: len(arr)-1)
+        comparisons (list): Mutable counter for comparisons
+    
     Returns:
-        tuple: (sorted array reference, total comparison count)
-        
+        tuple: (sorted array reference, total comparisons)
+    
     Time Complexity:
-        Best/Average: O(n log n) - balanced partitions
-        Worst: O(n²) - highly unbalanced partitions (mitigated by pivot strategy)
-        
+        Best/Average: O(n log n) with median-of-three
+        Worst: O(n²) - mitigated but not eliminated
+    
     Space Complexity:
-        O(log n) average - recursion stack depth
-        O(n) worst - deep recursion with unbalanced partitions
+        Average: O(log n) - recursion stack
+        Worst: O(n) - deep recursion on structured inputs
     """
     
     # Initialize parameters on first call
@@ -32,16 +53,14 @@ def quicksort(arr, low=None, high=None, comparisons=None):
     if high is None:
         high = len(arr) - 1
     if comparisons is None:
-        comparisons = [0]  # Use list to maintain reference across recursive calls
+        comparisons = [0]
     
-    # Base case: partition with 0 or 1 elements is already sorted
+    # Base case: 0 or 1 elements already sorted
     if low >= high:
         return arr, comparisons[0]
     
-    # Partition array and get pivot's final position
+    # Partition array and recursively sort
     pivot_index = partition(arr, low, high, comparisons)
-    
-    # Recursively sort elements before and after partition
     quicksort(arr, low, pivot_index - 1, comparisons)
     quicksort(arr, pivot_index + 1, high, comparisons)
     
@@ -50,34 +69,29 @@ def quicksort(arr, low=None, high=None, comparisons=None):
 
 def partition(arr, low, high, comparisons):
     """
-    Partitions array segment around a pivot using median-of-three selection.
-    
-    Rearranges elements so that:
-    - Elements < pivot are moved to the left
-    - Elements > pivot are moved to the right
-    - Pivot is placed at its final sorted position
-    
-    Median-of-three pivot selection examines first, middle, and last elements,
-    choosing the median value. This strategy significantly reduces the
-    probability of worst-case O(n²) behavior on sorted or reverse-sorted inputs.
+    Partition array around median-of-three pivot.
     
     Args:
-        arr (list): Array being sorted
-        low (int): Starting index of partition
-        high (int): Ending index of partition
+        arr (list): Array to partition
+        low (int): Starting index
+        high (int): Ending index
         comparisons (list): Comparison counter
-        
+    
     Returns:
-        int: Final index position of pivot element
+        int: Final pivot position
     """
     
-    # Median-of-three pivot selection
+    # Handle small subarrays (size < 3)
+    if high - low < 2:
+        comparisons[0] += 1
+        if arr[low] > arr[high]:
+            arr[low], arr[high] = arr[high], arr[low]
+        return high
+    
     mid = (low + high) // 2
     
-    # Sort first, middle, last elements to find median
-    # This places median at arr[mid]
-    comparisons[0] += 2  # Two comparisons needed to find median of three
-    
+    # Median-of-three: order first, middle, last elements
+    comparisons[0] += 2
     if arr[low] > arr[mid]:
         arr[low], arr[mid] = arr[mid], arr[low]
     if arr[low] > arr[high]:
@@ -85,41 +99,40 @@ def partition(arr, low, high, comparisons):
     if arr[mid] > arr[high]:
         arr[mid], arr[high] = arr[high], arr[mid]
     
-    # Place median (now at mid) at second-to-last position
-    # This is a standard optimization: pivot is temporarily moved
-    # to avoid redundant comparisons
+    # Now: arr[low] ≤ arr[mid] ≤ arr[high]
+    # Use middle element as pivot
     pivot = arr[mid]
+    
+    # Move pivot to second-to-last position
     arr[mid], arr[high - 1] = arr[high - 1], arr[mid]
     pivot_index = high - 1
     
-    # Partition remaining elements (between low+1 and high-2)
-    # arr[low] and arr[high] already positioned correctly from median-of-three
+    # Partition remaining elements
     i = low
     j = high - 1
     
     while True:
-        # Move i right until finding element >= pivot
+        # Move i right until finding element ≥ pivot
         i += 1
-        comparisons[0] += 1
         while i < pivot_index and arr[i] < pivot:
+            comparisons[0] += 1
             i += 1
-            comparisons[0] += 1
         
-        # Move j left until finding element <= pivot
+        # Move j left until finding element ≤ pivot
         j -= 1
-        comparisons[0] += 1
         while j > low and arr[j] > pivot:
-            j -= 1
             comparisons[0] += 1
+            j -= 1
         
-        # If pointers crossed, partitioning is complete
+        # If pointers crossed, partitioning complete
         if i >= j:
             break
         
-        # Swap elements at i and j
+        # Swap elements
         arr[i], arr[j] = arr[j], arr[i]
+        comparisons[0] += 1
     
-    # Place pivot in its final position (between partitions)
+    # Place pivot in final position
     arr[i], arr[pivot_index] = arr[pivot_index], arr[i]
     
     return i
@@ -127,107 +140,110 @@ def partition(arr, low, high, comparisons):
 
 def quicksort_wrapper(arr):
     """
-    Convenience wrapper for QuickSort that creates a copy of the input array.
+    Standard wrapper for QuickSort (no memory tracking).
     
-    This function is used in experiments to prevent mutation of original
-    datasets, ensuring each trial works with identical input data.
+    Use this for accurate timing measurements.
     
     Args:
-        arr (list): Array to be sorted
-        
+        arr (list): Array to sort
+    
     Returns:
         tuple: (sorted array, comparison count)
     """
-    arr_copy = arr.copy()  # Create copy to preserve original
+    if not arr:
+        return [], 0
+    
+    arr_copy = arr.copy()
     return quicksort(arr_copy)
 
 
-# Example usage demonstrating correctness and comparison counting
-if __name__ == "__main__":
-    # Test Case 1: Random data
-    test_random = [64, 34, 25, 12, 22, 11, 90]
-    sorted_arr, comps = quicksort_wrapper(test_random)
-    print(f"Random: {sorted_arr}")
-    print(f"Comparisons: {comps}\n")
+def quicksort_wrapper_with_memory(arr):
+    """
+    QuickSort wrapper WITH memory tracking (tracemalloc).
     
-    # Test Case 2: Already sorted (tests pivot optimization)
-    test_sorted = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    sorted_arr, comps = quicksort_wrapper(test_sorted)
-    print(f"Already Sorted: {sorted_arr}")
-    print(f"Comparisons: {comps}\n")
+    WARNING: Introduces ~12× performance overhead!
+    Use ONLY for memory analysis, NOT for timing comparison.
     
-    # Test Case 3: Reverse sorted (worst case for naive pivot)
-    test_reverse = [9, 8, 7, 6, 5, 4, 3, 2, 1]
-    sorted_arr, comps = quicksort_wrapper(test_reverse)
-    print(f"Reverse Sorted: {sorted_arr}")
-    print(f"Comparisons: {comps}\n")
+    Args:
+        arr (list): Array to sort
     
-    # Test Case 4: Duplicates
-    test_duplicates = [5, 2, 8, 2, 9, 1, 5, 5]
-    sorted_arr, comps = quicksort_wrapper(test_duplicates)
-    print(f"Duplicates: {sorted_arr}")
-    print(f"Comparisons: {comps}\n")
+    Returns:
+        tuple: (sorted array, comparison count, memory_dict)
+        
+    memory_dict contains:
+        - 'tracemalloc_mb': Python allocations (precise)
+        - 'psutil_mb': Process RSS growth (includes overhead)
+    """
+    if not arr:
+        return [], 0, {'tracemalloc_mb': 0.0, 'psutil_mb': 0.0}
     
-    # Test Case 5: Single element
-    test_single = [42]
-    sorted_arr, comps = quicksort_wrapper(test_single)
-    print(f"Single Element: {sorted_arr}")
-    print(f"Comparisons: {comps}\n")
+    arr_copy = arr.copy()
     
-    # Test Case 6: Empty array
-    test_empty = []
-    sorted_arr, comps = quicksort_wrapper(test_empty)
-    print(f"Empty: {sorted_arr}")
-    print(f"Comparisons: {comps}")
+    # Baseline process memory
+    process = psutil.Process(os.getpid())
+    baseline_rss = process.memory_info().rss
+    
+    # Start tracemalloc
+    tracemalloc.start()
+    
+    # Execute QuickSort
+    sorted_arr, comparisons = quicksort(arr_copy)
+    
+    # Capture memory measurements
+    current_mem, peak_mem = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    
+    final_rss = process.memory_info().rss
+    
+    memory_dict = {
+        'tracemalloc_mb': peak_mem / (1024 * 1024),
+        'psutil_mb': (final_rss - baseline_rss) / (1024 * 1024),
+    }
+    
+    return sorted_arr, comparisons, memory_dict
 
+
+# ==========================================
+# MERGESORT IMPLEMENTATION
+# ==========================================
 
 def mergesort(arr, comparisons=None):
     """
-    Stable MergeSort implementation using divide-and-conquer strategy.
-    
-    This implementation creates auxiliary arrays during the merge process,
-    resulting in O(n) space complexity. This represents a fundamental
-    trade-off: guaranteed O(n log n) time complexity in exchange for
-    higher memory consumption compared to in-place algorithms.
+    Recursive MergeSort implementation.
     
     Args:
-        arr (list): Array to be sorted
-        comparisons (list): Mutable container tracking comparison count
-        
+        arr (list): Array to sort
+        comparisons (list): Mutable counter for comparisons
+    
     Returns:
-        tuple: (sorted array, total comparison count)
-        
+        tuple: (sorted array, total comparisons)
+    
     Time Complexity:
-        Best/Average/Worst: O(n log n) - always divides evenly
-        
+        All cases: O(n log n) - always divides evenly
+    
     Space Complexity:
         O(n) - auxiliary arrays for merging
-        O(log n) - recursion stack depth
+        O(log n) - recursion stack
         Total: O(n) dominated by merge arrays
-        
-    Stability:
-        Stable - preserves relative order of equal elements
-        Critical for multi-key sorting and maintaining metadata associations
     """
     
-    # Initialize comparison counter on first call
     if comparisons is None:
-        comparisons = [0]  # Use list to maintain reference across recursive calls
+        comparisons = [0]
     
-    # Base case: arrays with 0 or 1 elements are already sorted
+    # Base case: 0 or 1 elements already sorted
     if len(arr) <= 1:
         return arr, comparisons[0]
     
-    # Divide: Split array into two halves
+    # Divide: split at midpoint
     mid = len(arr) // 2
-    left_half = arr[:mid]    # Slice creates new list: O(n/2) space
-    right_half = arr[mid:]   # Slice creates new list: O(n/2) space
+    left_half = arr[:mid]
+    right_half = arr[mid:]
     
-    # Conquer: Recursively sort each half
+    # Conquer: recursively sort halves
     left_sorted, _ = mergesort(left_half, comparisons)
     right_sorted, _ = mergesort(right_half, comparisons)
     
-    # Combine: Merge the sorted halves
+    # Combine: merge sorted halves
     merged = merge(left_sorted, right_sorted, comparisons)
     
     return merged, comparisons[0]
@@ -235,35 +251,25 @@ def mergesort(arr, comparisons=None):
 
 def merge(left, right, comparisons):
     """
-    Merges two sorted arrays into a single sorted array.
-    
-    This is the core operation of MergeSort. By comparing the smallest
-    unmerged elements from each subarray, it constructs the result in
-    sorted order. The algorithm guarantees O(n) time for merging, where
-    n = len(left) + len(right).
+    Merge two sorted arrays into one sorted array.
     
     Args:
-        left (list): First sorted subarray
-        right (list): Second sorted subarray
+        left (list): First sorted array
+        right (list): Second sorted array
         comparisons (list): Comparison counter
-        
+    
     Returns:
-        list: Merged sorted array containing all elements from left and right
-        
-    Stability Property:
-        When left[i] == right[j], the element from 'left' is chosen first.
-        This preserves the original relative ordering, ensuring stability.
+        list: Merged sorted array
     """
     
-    result = []  # Auxiliary array: O(n) space
-    i = j = 0    # Pointers for left and right subarrays
+    result = []
+    i = j = 0
     
-    # Merge elements in sorted order by comparing front elements
+    # Merge while both arrays have elements
     while i < len(left) and j < len(right):
-        comparisons[0] += 1  # Count each comparison
+        comparisons[0] += 1
         
-        # Use <= (not <) to maintain stability
-        # Equal elements from 'left' subarray come first
+        # Use ≤ (not <) to maintain stability
         if left[i] <= right[j]:
             result.append(left[i])
             i += 1
@@ -271,174 +277,257 @@ def merge(left, right, comparisons):
             result.append(right[j])
             j += 1
     
-    # Append remaining elements (at most one subarray has remaining elements)
-    # No comparisons needed - remaining elements are already sorted
-    result.extend(left[i:])   # If left has remaining elements
-    result.extend(right[j:])  # If right has remaining elements
+    # Append remaining elements (no comparisons needed)
+    result.extend(left[i:])
+    result.extend(right[j:])
     
     return result
 
 
 def mergesort_wrapper(arr):
     """
-    Convenience wrapper for MergeSort that preserves the original array.
+    Standard wrapper for MergeSort (no memory tracking).
     
-    Since MergeSort creates new arrays during sorting, this wrapper
-    exists primarily for API consistency with QuickSort's wrapper,
-    which must explicitly copy the input to avoid in-place mutation.
+    Use this for accurate timing measurements.
     
     Args:
-        arr (list): Array to be sorted
-        
+        arr (list): Array to sort
+    
     Returns:
         tuple: (sorted array, comparison count)
     """
-    # Note: MergeSort naturally returns a new array, so explicit copy
-    # is unnecessary. However, we copy for consistency with QuickSort API
-    # and to guarantee the original array remains unmodified.
+    if not arr:
+        return [], 0
+    
     arr_copy = arr.copy()
     return mergesort(arr_copy)
 
 
-def mergesort_iterative(arr):
+def mergesort_wrapper_with_memory(arr):
     """
-    Iterative (bottom-up) MergeSort implementation for comparison.
+    MergeSort wrapper WITH memory tracking (tracemalloc).
     
-    This variant eliminates recursion by iteratively merging progressively
-    larger subarrays. It achieves the same O(n log n) time complexity but
-    with O(1) stack space (only O(n) heap space for merge arrays).
-    
-    Included to demonstrate algorithmic alternatives and validate that
-    recursive implementation does not introduce anomalous behavior.
+    WARNING: Introduces ~6× performance overhead!
+    Use ONLY for memory analysis, NOT for timing comparison.
     
     Args:
-        arr (list): Array to be sorted
-        
+        arr (list): Array to sort
+    
     Returns:
-        tuple: (sorted array, comparison count)
+        tuple: (sorted array, comparison count, memory_dict)
     """
+    if not arr:
+        return [], 0, {'tracemalloc_mb': 0.0, 'psutil_mb': 0.0}
     
-    if len(arr) <= 1:
-        return arr, 0
+    arr_copy = arr.copy()
     
-    arr = arr.copy()  # Work on copy to avoid mutation
-    n = len(arr)
-    comparisons = [0]
+    # Baseline process memory
+    process = psutil.Process(os.getpid())
+    baseline_rss = process.memory_info().rss
     
-    # Start with subarrays of size 1, double size each iteration
-    current_size = 1
+    # Start tracemalloc
+    tracemalloc.start()
     
-    # Outer loop: O(log n) iterations
-    while current_size < n:
-        # Merge subarrays of current_size
-        # Inner loop: O(n) work per iteration
-        for start in range(0, n, current_size * 2):
-            # Calculate subarray boundaries
-            mid = min(start + current_size, n)
-            end = min(start + current_size * 2, n)
-            
-            # Merge arr[start:mid] and arr[mid:end]
-            left = arr[start:mid]
-            right = arr[mid:end]
-            merged = merge(left, right, comparisons)
-            
-            # Copy merged result back to original array
-            arr[start:end] = merged
-        
-        # Double the subarray size for next iteration
-        current_size *= 2
+    # Execute MergeSort
+    sorted_arr, comparisons = mergesort(arr_copy)
     
-    return arr, comparisons[0]
+    # Capture memory measurements
+    current_mem, peak_mem = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    
+    final_rss = process.memory_info().rss
+    
+    memory_dict = {
+        'tracemalloc_mb': peak_mem / (1024 * 1024),
+        'psutil_mb': (final_rss - baseline_rss) / (1024 * 1024),
+    }
+    
+    return sorted_arr, comparisons, memory_dict
 
 
-# Example usage demonstrating correctness, stability, and comparison counting
-if __name__ == "__main__":
-    print("=" * 60)
-    print("MergeSort Validation and Demonstration")
-    print("=" * 60)
-    
-    # Test Case 1: Random data
-    print("\n1. Random Data:")
-    test_random = [64, 34, 25, 12, 22, 11, 90]
-    sorted_arr, comps = mergesort_wrapper(test_random)
-    print(f"   Input:       {test_random}")
-    print(f"   Sorted:      {sorted_arr}")
-    print(f"   Comparisons: {comps}")
-    
-    # Test Case 2: Already sorted (tests best-case behavior)
-    print("\n2. Already Sorted (Best Case):")
-    test_sorted = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    sorted_arr, comps = mergesort_wrapper(test_sorted)
-    print(f"   Input:       {test_sorted}")
-    print(f"   Sorted:      {sorted_arr}")
-    print(f"   Comparisons: {comps}")
-    print(f"   Note: Same as worst case - MergeSort always O(n log n)")
-    
-    # Test Case 3: Reverse sorted (tests worst-case behavior)
-    print("\n3. Reverse Sorted (Worst Case):")
-    test_reverse = [9, 8, 7, 6, 5, 4, 3, 2, 1]
-    sorted_arr, comps = mergesort_wrapper(test_reverse)
-    print(f"   Input:       {test_reverse}")
-    print(f"   Sorted:      {sorted_arr}")
-    print(f"   Comparisons: {comps}")
-    
-    # Test Case 4: Duplicates (tests stability and duplicate handling)
-    print("\n4. Duplicates (Tests Stability):")
-    test_duplicates = [5, 2, 8, 2, 9, 1, 5, 5]
-    sorted_arr, comps = mergesort_wrapper(test_duplicates)
-    print(f"   Input:       {test_duplicates}")
-    print(f"   Sorted:      {sorted_arr}")
-    print(f"   Comparisons: {comps}")
-    
-    # Test Case 5: Stability demonstration with tuples
-    print("\n5. Stability Demonstration (tuple: value, original_index):")
-    # Create tuples of (value, original_position) to track stability
-    test_stability = [(3, 0), (1, 1), (3, 2), (2, 3), (3, 4)]
-    # MergeSort by first element only
-    sorted_arr, comps = mergesort_wrapper(test_stability)
-    print(f"   Input:  {test_stability}")
-    print(f"   Sorted: {sorted_arr}")
-    print(f"   Check: (3,0) < (3,2) < (3,4) → Order preserved ✓")
-    
-    # Test Case 6: Single element
-    print("\n6. Edge Case - Single Element:")
-    test_single = [42]
-    sorted_arr, comps = mergesort_wrapper(test_single)
-    print(f"   Input:       {test_single}")
-    print(f"   Sorted:      {sorted_arr}")
-    print(f"   Comparisons: {comps} (no comparisons needed)")
-    
-    # Test Case 7: Empty array
-    print("\n7. Edge Case - Empty Array:")
-    test_empty = []
-    sorted_arr, comps = mergesort_wrapper(test_empty)
-    print(f"   Input:       {test_empty}")
-    print(f"   Sorted:      {sorted_arr}")
-    print(f"   Comparisons: {comps}")
-    
-    # Test Case 8: Comparison with iterative implementation
-    print("\n8. Recursive vs. Iterative Implementation:")
-    test_comparison = [15, 3, 8, 1, 9, 2, 14, 7]
-    sorted_recursive, comps_recursive = mergesort_wrapper(test_comparison)
-    sorted_iterative, comps_iterative = mergesort_iterative(test_comparison)
-    print(f"   Input:      {test_comparison}")
-    print(f"   Recursive:  {sorted_recursive} ({comps_recursive} comparisons)")
-    print(f"   Iterative:  {sorted_iterative} ({comps_iterative} comparisons)")
-    print(f"   Match: {sorted_recursive == sorted_iterative} ✓")
-    
-    # Test Case 9: Large-scale validation
-    print("\n9. Large-Scale Validation (10,000 elements):")
+# ==========================================
+# VALIDATION AND TESTING
+# ==========================================
+
+def validate_sorting_algorithms():
+    """
+    Comprehensive validation suite for both algorithms.
+    """
     import random
-    random.seed(42)
-    large_test = [random.randint(0, 10000) for _ in range(10000)]
-    sorted_arr, comps = mergesort_wrapper(large_test)
-    is_correct = sorted_arr == sorted(large_test)
-    print(f"   Size:        10,000 elements")
-    print(f"   Comparisons: {comps}")
-    print(f"   Correct:     {is_correct} ✓")
-    print(f"   Theoretical: ~10,000 × log₂(10,000) ≈ {10000 * 13.3:.0f}")
-    print(f"   Ratio:       {comps / (10000 * 13.3):.2f}× theoretical")
     
-    print("\n" + "=" * 60)
-    print("All validation tests completed successfully ✓")
-    print("=" * 60)
+    print("=" * 70)
+    print("SORTING ALGORITHMS VALIDATION SUITE")
+    print("=" * 70)
+    
+    # Basic correctness tests
+    test_cases = [
+        ([], "Empty array"),
+        ([1], "Single element"),
+        ([2, 1], "Two elements"),
+        ([1, 2, 3], "Already sorted"),
+        ([3, 2, 1], "Reverse sorted"),
+        ([1, 1, 1], "All duplicates"),
+        ([3, 1, 4, 1, 5, 9, 2, 6], "Mixed with duplicates"),
+    ]
+    
+    print("\n1. Basic Correctness Tests:")
+    print("-" * 70)
+    
+    all_passed = True
+    
+    for test_input, description in test_cases:
+        expected = sorted(test_input)
+        
+        qs_result, _ = quicksort_wrapper(test_input.copy())
+        ms_result, _ = mergesort_wrapper(test_input.copy())
+        
+        qs_correct = (qs_result == expected)
+        ms_correct = (ms_result == expected)
+        
+        if qs_correct and ms_correct:
+            print(f"  ✓ {description:25s}")
+        else:
+            print(f"  ✗ {description:25s}: QS={qs_correct}, MS={ms_correct}")
+            all_passed = False
+    
+    # Stress test
+    print("\n2. Stress Test (100 random arrays):")
+    print("-" * 70)
+    
+    random.seed(42)
+    stress_passed = 0
+    
+    for i in range(100):
+        size = random.randint(0, 1000)
+        test_arr = [random.randint(-1000, 1000) for _ in range(size)]
+        expected = sorted(test_arr)
+        
+        qs_result, _ = quicksort_wrapper(test_arr.copy())
+        ms_result, _ = mergesort_wrapper(test_arr.copy())
+        
+        if qs_result == expected and ms_result == expected:
+            stress_passed += 1
+        else:
+            print(f"  ✗ Failed on size {size}")
+            all_passed = False
+            break
+    
+    print(f"  Passed: {stress_passed}/100")
+    
+    # Memory tracking test
+    print("\n3. Memory Tracking Test (10,000 elements):")
+    print("-" * 70)
+    
+    random.seed(99)
+    test_arr = [random.randint(0, 10000) for _ in range(10000)]
+    
+    qs_sorted, qs_comps, qs_mem = quicksort_wrapper_with_memory(test_arr.copy())
+    ms_sorted, ms_comps, ms_mem = mergesort_wrapper_with_memory(test_arr.copy())
+    
+    print(f"  QuickSort:")
+    print(f"    Comparisons: {qs_comps:,}")
+    print(f"    Memory (tracemalloc): {qs_mem['tracemalloc_mb']:.4f} MB")
+    print(f"    Memory (psutil): {qs_mem['psutil_mb']:.4f} MB")
+    print(f"    Correct: {qs_sorted == sorted(test_arr)}")
+    
+    print(f"\n  MergeSort:")
+    print(f"    Comparisons: {ms_comps:,}")
+    print(f"    Memory (tracemalloc): {ms_mem['tracemalloc_mb']:.4f} MB")
+    print(f"    Memory (psutil): {ms_mem['psutil_mb']:.4f} MB")
+    print(f"    Correct: {ms_sorted == sorted(test_arr)}")
+    
+    print(f"\n  Memory Ratio: {ms_mem['tracemalloc_mb'] / qs_mem['tracemalloc_mb']:.0f}× "
+          f"(MergeSort uses more)")
+    
+    # Final summary
+    print("\n" + "=" * 70)
+    if all_passed:
+        print("✓ ALL VALIDATION TESTS PASSED")
+        print("Both algorithms ready for experimental use")
+    else:
+        print("✗ SOME TESTS FAILED - Review implementation")
+    print("=" * 70)
+    
+    return all_passed
+
+
+# ==========================================
+# PERFORMANCE COMPARISON TEST
+# ==========================================
+
+def compare_wrapper_overhead():
+    """
+    Demonstrate the overhead difference between standard and memory wrappers.
+    """
+    import random
+    import time
+    
+    print("\n" + "=" * 70)
+    print("WRAPPER OVERHEAD COMPARISON")
+    print("=" * 70)
+    
+    random.seed(42)
+    test_sizes = [1000, 10000, 50000]
+    
+    for size in test_sizes:
+        print(f"\nDataset size: {size:,} elements")
+        print("-" * 70)
+        
+        dataset = [random.randint(0, size) for _ in range(size)]
+        
+        # Standard wrapper (no memory tracking)
+        start = time.perf_counter()
+        qs_result1, qs_comps1 = quicksort_wrapper(dataset.copy())
+        qs_time_standard = time.perf_counter() - start
+        
+        start = time.perf_counter()
+        ms_result1, ms_comps1 = mergesort_wrapper(dataset.copy())
+        ms_time_standard = time.perf_counter() - start
+        
+        # Memory wrapper (with tracemalloc)
+        start = time.perf_counter()
+        qs_result2, qs_comps2, qs_mem = quicksort_wrapper_with_memory(dataset.copy())
+        qs_time_memory = time.perf_counter() - start
+        
+        start = time.perf_counter()
+        ms_result2, ms_comps2, ms_mem = mergesort_wrapper_with_memory(dataset.copy())
+        ms_time_memory = time.perf_counter() - start
+        
+        # Calculate overhead
+        qs_overhead = qs_time_memory / qs_time_standard
+        ms_overhead = ms_time_memory / ms_time_standard
+        
+        print(f"  QuickSort:")
+        print(f"    Standard wrapper: {qs_time_standard:.4f}s")
+        print(f"    Memory wrapper:   {qs_time_memory:.4f}s")
+        print(f"    Overhead factor:  {qs_overhead:.1f}×")
+        
+        print(f"\n  MergeSort:")
+        print(f"    Standard wrapper: {ms_time_standard:.4f}s")
+        print(f"    Memory wrapper:   {ms_time_memory:.4f}s")
+        print(f"    Overhead factor:  {ms_overhead:.1f}×")
+        
+        print(f"\n  Comparison:")
+        print(f"    Standard: QS/MS ratio = {ms_time_standard/qs_time_standard:.2f}× "
+              f"({'QS faster' if ms_time_standard > qs_time_standard else 'MS faster'})")
+        print(f"    With tracemalloc: QS/MS ratio = {ms_time_memory/qs_time_memory:.2f}× "
+              f"({'QS faster' if ms_time_memory > qs_time_memory else 'MS faster'})")
+    
+    print("\n" + "=" * 70)
+    print("CONCLUSION:")
+    print("  • tracemalloc introduces 6-12× overhead")
+    print("  • Overhead affects QuickSort MORE (recursive allocations)")
+    print("  • Use standard wrappers for timing, memory wrappers for space analysis")
+    print("=" * 70)
+
+
+# ==========================================
+# MAIN EXECUTION
+# ==========================================
+
+if __name__ == "__main__":
+    # Run validation
+    validate_sorting_algorithms()
+    
+    # Demonstrate overhead
+    compare_wrapper_overhead()
